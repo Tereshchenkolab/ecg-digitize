@@ -1,7 +1,3 @@
-# GUI
-fbs==0.9.0
-PyQt5==5.15.1
-
 # Numerical/image
 numpy
 scipy
@@ -12,3 +8,4 @@ qimage2ndarray
 matplotlib
 mypy
 pathlib
+dataclasses
