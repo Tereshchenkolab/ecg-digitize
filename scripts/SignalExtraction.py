@@ -1,5 +1,11 @@
-#!/usr/bin/env python
+#!$HOME/.pyenv/shims/python
 # coding: utf-8
+
+import os
+if 'PYTHONPATH' not in os.environ:
+    print(''.join(sorted([f"{key}:{value}\n" for key, value in os.environ.items()])))
+    print("Error: Run `source env.sh` to be able to run `/scripts/*.py`")
+    exit(1)
 
 from collections import defaultdict
 
@@ -8,10 +14,10 @@ from cv2 import data
 import matplotlib.pyplot as plt
 from cv2 import imread as loadImage
 
-from src.main.python.ECGToolkit.SignalExtraction._SignalExtraction import *
-from src.main.python.ECGToolkit.SignalDetection import *
-from src.main.python.ECGToolkit.Vision import *
-from src.main.python.ECGToolkit.Visualization import *
+from digitize.SignalExtraction._SignalExtraction import *
+from digitize.SignalDetection import *
+from digitize.Vision import *
+from digitize.Visualization import *
 
 
 
@@ -40,10 +46,11 @@ def detectSignal(image, otsuHedging: int = 0.6, kernelSize: int = 3, erosions: i
 
 
 
-# image = loadImage("leadPictures/slighty-noisey-aVL-small.png")
-# image = loadImage("leadPictures/007-cropped.jpeg")
-# image = loadImage("leadPictures/II.png")
-image = loadImage("leadPictures/fullscan-II-cropped.png")
+# image = loadImage("lead-pictures/slighty-noisey-aVL-small.png")
+# image = loadImage("lead-pictures/007-cropped.jpeg")
+# image = loadImage("lead-pictures/II.png")
+image = loadImage("lead-pictures/fullscan-II-cropped.png")
+assert image is not None, "Image failed to load!"
 
 _, width, _ = image.shape
 

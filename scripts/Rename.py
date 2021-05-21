@@ -1,3 +1,7 @@
+import os
+if 'PYTHONPATH' not in os.environ:
+    print("Error: Run `source env.sh` to be able to run `/scripts/*.py`")
+    exit(1)
 
 import glob
 from pathlib import Path

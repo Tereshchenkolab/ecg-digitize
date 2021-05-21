@@ -1,10 +1,16 @@
+import os
+if 'PYTHONPATH' not in os.environ:
+    print("Error: Run `source env.sh` to be able to run `/scripts/*.py`")
+    exit(1)
+
 from typing import Optional
 import cv2
 import matplotlib.pyplot as plt
 from cv2 import imread as loadImage
 
-from src.main.python.ECGToolkit.Visualization import *
-from src.main.python.ECGToolkit.Vision import *
+from digitize.Visualization import *
+from digitize.Vision import *
+
 
 def shiftedPairs(signal, limit: Optional[int] = None):
     limit = len(signal) // 2 if limit is None else limit

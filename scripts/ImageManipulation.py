@@ -1,11 +1,16 @@
+import os
+if 'PYTHONPATH' not in os.environ:
+    print("Error: Run `source env.sh` to be able to run `/scripts/*.py`")
+    exit(1)
+
 import cv2
 import numpy as np
 
 # Super janky but makes backwards compatibility easier
-from src.main.python.ECGToolkit.Vision import getLinesInDirection
-from src.main.python.ECGToolkit.Visualization import *
-from src.main.python.ECGToolkit.Common import *
-from src.main.python.ECGToolkit.GridDetection import *
+from digitize.Vision import getLinesInDirection
+from digitize.Visualization import *
+from digitize.Common import *
+from digitize.GridDetection import *
 
 
 def removeNonGridLines(lines, threshold):

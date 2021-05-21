@@ -1,10 +1,14 @@
 import os
+if 'PYTHONPATH' not in os.environ:
+    print("Error: Run `source env.sh` to be able to run `/scripts/*.py`")
+    exit(1)
+
 import sys
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-import SignalLoader
+from scripts import SignalLoader
 
 if os.name != 'posix':
     print("Julian doesn't understand Windows links :( sorry")

@@ -31,7 +31,7 @@ def estimateRotationAngle(image, houghThresholdFraction=0.25):
 def extractSignalFromImage(image, detectionMethod, extractionMethod):
     # Note that the signal is mirrored across the x-axis due to the coordinate system of images.
     signalBinary = detectionMethod(image)
-    pixelValues = extractionMethod(signalBinary)
+    signal = extractionMethod(signalBinary)
 
     return signal
 

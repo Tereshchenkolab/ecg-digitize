@@ -1,6 +1,6 @@
 import numpy as np
 
-from Utility import *
+from scripts.Utility import *
 
 # Not using rn, but maybe this is useful?
 class SignalData:
