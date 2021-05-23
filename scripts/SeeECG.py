@@ -8,7 +8,7 @@ import numpy as np
 import glob
 import sys
 
-import SignalLoader
+import scripts.SignalLoader
 
 if os.name != 'posix':
     print("Julian doesn't understand Windows :( sorry")

@@ -5,17 +5,12 @@ Created February 17, 2021
 Holds helper functions and types used by all modules.
 """
 from collections import Counter
-import functools
+from functools import partial
 from typing import Any, Callable, Iterable, Tuple, TypeVar, Union
 
 import numpy as np
-from numpy.lib.function_base import median
+from numpy import mean, median
 
-
-# Pass through
-partial = functools.partial
-mean = np.mean
-median = np.median
 
 # Types
 List = list
