@@ -9,6 +9,3 @@ matplotlib
 mypy
 pathlib
 dataclasses
-
-# Development
-pytest
