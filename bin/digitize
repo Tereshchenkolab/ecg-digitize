@@ -4,4 +4,13 @@
 Command line interface for running digitization.
 """
 
+import sys
+from argparse import 
 
+
+def main():
+    print(sys.argv)
+
+
+if __name__ == "__main__":
+    main()
