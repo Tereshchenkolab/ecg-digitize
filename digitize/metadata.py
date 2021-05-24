@@ -4,11 +4,10 @@ metadata.py
 Contains classes and functions for handling metadata associated with leads used as inputs to
 the extraction process. "Metadata" generally refers to non-image, human-provided data.
 """
-
 import json
 from typing import Any, Dict, List, Optional, Union
 import dataclasses
-from pathlib import Path
+import pathlib
 
 from . import lead
 
@@ -43,7 +42,7 @@ class CropLocation():
 
 @dataclasses.dataclass(frozen=True)
 class LeadMetadata():
-    file: Path  # This is guaranteed to be a file on disk
+    file: pathlib.Path  # This is guaranteed to be a file on disk
     timeScale: float
     voltageScale: float
     cropping: Optional[CropLocation] = None
@@ -53,7 +52,7 @@ class LeadMetadata():
         assert self.file.exists()
 
     @staticmethod
-    def outputFilePath(filePath: Path) -> str:
+    def outputFilePath(filePath: pathlib.Path) -> str:
         return str(filePath.absolute())
 
     def toDict(self):
@@ -107,15 +106,15 @@ def serializeEcgMetdata(data: EcgMetadata) -> str:
             dictionary.pop('voltageScale')
         return dictionary
 
-    outputDictionary = {lead.value: convertLead(meta) for lead, meta in data.items()}
+    outputDictionary: Dict[str, Any] = {lead.value: convertLead(meta) for lead, meta in data.items()}
 
     # Add any metadata that are the same for all leads
     if sharedFile is not None:
         outputDictionary['file'] = sharedFile
     if sharedTimeScale is not None:
-        outputDictionary['timeScale'] = sharedTimeScale
+        outputDictionary['timeScale'] = str(sharedTimeScale)
     if sharedVoltageScale is not None:
-        outputDictionary['voltageScale'] = sharedVoltageScale
+        outputDictionary['voltageScale'] = str(sharedVoltageScale)
 
     return json.dumps(outputDictionary)
 
@@ -130,7 +129,7 @@ def deserializeEcgMetdata(jsonSerial: str) -> EcgMetadata:
     def parseLead(dictionary: Dict[str, Any]) -> LeadMetadata:
         # Delete any metadata that are the same for all leads to save file space
         if sharedFile is not None:
-            dictionary['file'] = Path(sharedFile)
+            dictionary['file'] = pathlib.Path(sharedFile)
         if sharedTimeScale is not None:
             dictionary['timeScale'] = sharedTimeScale
         if sharedVoltageScale is not None:
@@ -143,8 +142,8 @@ def deserializeEcgMetdata(jsonSerial: str) -> EcgMetadata:
     return ecgMetadata
 
 
-def writeEcgMetadata(data: EcgMetadata, filePath: Path):
-    assert isinstance(filePath, Path)
+def writeEcgMetadata(data: EcgMetadata, filePath: pathlib.Path):
+    assert isinstance(filePath, pathlib.Path)
     assert not filePath.is_dir()
     # TODO: Error handle the path
 
@@ -154,8 +153,8 @@ def writeEcgMetadata(data: EcgMetadata, filePath: Path):
         file.write(jsonSerial)
 
 
-def loadEcgMetadata(filePath: Path) -> EcgMetadata:
-    assert isinstance(filePath, Path)
+def loadEcgMetadata(filePath: pathlib.Path) -> EcgMetadata:
+    assert isinstance(filePath, pathlib.Path)
     assert filePath.exists()
     # TODO: Error handle the path
 

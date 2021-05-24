@@ -1,4 +1,4 @@
-from pathlib import Path
+import pathlib
 
 from digitize import lead, metadata
 
@@ -32,7 +32,7 @@ def testCroppingFromDict():
 def testEcgMetadataSerialize():
     myEcg: metadata.EcgMetadata = {
         lead.Lead.I: metadata.LeadMetadata(
-            Path('/Users/julianfortune/Desktop/Data/SOHSU10121052013140_0001.tif'),
+            pathlib.Path('./data/SOHSU10121052013140_0001.tif'),
             10,
             25,
             metadata.CropLocation(
@@ -44,25 +44,26 @@ def testEcgMetadataSerialize():
             2500
         ),
         lead.Lead.II: metadata.LeadMetadata(
-            Path('/Users/julianfortune/Desktop/Data/SOHSU10121052013140_0001.tif'),
+            pathlib.Path('./data/SOHSU10121052013140_0001.tif'),
             10,
             25
         ),
     }
-
     serialized = metadata.serializeEcgMetdata(myEcg)
 
-    expected = '{"I": {"start": 2500, "cropping": {"x": 24, "y": 350, "width": 203, "height": 348}}, "II": {}, "file": "/Users/julianfortune/Desktop/Data/SOHSU10121052013140_0001.tif", "timeScale": 10, "voltageScale": 25}'
-    assert serialized == expected
+    expected = '{"I": {"start": 2500, "cropping": {"x": 24, "y": 350, "width": 203, "height": 348}}, "II": {}, "file": "./data/SOHSU10121052013140_0001.tif", "timeScale": 10, "voltageScale": 25}'
+    # When Metadata is serialized the path becomes absolute so a direct comparison doesn't work
+    assert '{"I": {"start": 2500, "cropping": {"x": 24, "y": 350, "width": 203, "height": 348}}, "II": {}, "file": ' in serialized
+    assert '/data/SOHSU10121052013140_0001.tif", "timeScale": 10, "voltageScale": 25}' in serialized
 
 
 def testEcgMetadataDeserialize():
-    serialized = '{"I": {"start": 2500, "cropping": {"x": 24, "y": 350, "width": 203, "height": 348}}, "II": {}, "file": "/Users/julianfortune/Desktop/Data/SOHSU10121052013140_0001.tif", "timeScale": 10, "voltageScale": 25}'
+    serialized = '{"I": {"start": 2500, "cropping": {"x": 24, "y": 350, "width": 203, "height": 348}}, "II": {}, "file": "./data/SOHSU10121052013140_0001.tif", "timeScale": 10, "voltageScale": 25}'
     loadedEcg = metadata.deserializeEcgMetdata(serialized)
 
     expected: metadata.EcgMetadata = {
         lead.Lead.I: metadata.LeadMetadata(
-            Path('/Users/julianfortune/Desktop/Data/SOHSU10121052013140_0001.tif'),
+            pathlib.Path('./data/SOHSU10121052013140_0001.tif'),
             10,
             25,
             metadata.CropLocation(
@@ -74,7 +75,7 @@ def testEcgMetadataDeserialize():
             2500
         ),
         lead.Lead.II: metadata.LeadMetadata(
-            Path('/Users/julianfortune/Desktop/Data/SOHSU10121052013140_0001.tif'),
+            pathlib.Path('./data/SOHSU10121052013140_0001.tif'),
             10,
             25
         ),

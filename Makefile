@@ -9,3 +9,6 @@ build:
 # Install extra packages required for development
 develop:
 	pip install -r requirements-development.txt
+
+typecheck:
+	mypy digitize/

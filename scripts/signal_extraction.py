@@ -49,7 +49,8 @@ def detectSignal(image, otsuHedging: int = 0.6, kernelSize: int = 3, erosions: i
 # image = loadImage("lead-pictures/slighty-noisey-aVL-small.png")
 # image = loadImage("lead-pictures/007-cropped.jpeg")
 # image = loadImage("lead-pictures/II.png")
-image = loadImage("lead-pictures/fullscan-II-cropped.png")
+# image = loadImage("lead-pictures/fullscan-II-cropped.png")
+image = loadImage("lead-pictures/I.png")
 assert image is not None, "Image failed to load!"
 
 _, width, _ = image.shape
