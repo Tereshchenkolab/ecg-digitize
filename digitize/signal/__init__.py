@@ -1,6 +1,1 @@
-"""
-__init__.py
-Created May 23, 2021
-
-...
-"""
+from .signal import extractSignalFromImage, verticallyScaleECGSignal, zeroECGSignal

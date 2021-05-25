@@ -8,12 +8,11 @@ from . import common
 from . import vision
 
 
-def extractGridFromImage(image, detectionMethod, spacingReductionMethod=common.mode):
+def extractGridFromImage(image, spacingReductionMethod=common.mode):
     """Takes a cropped image of a single lead and returns the grid scaling in pixels
 
     Args:
         image (??): 2d color image of the lead
-        detectionMethod (??): Function that converts a 2d color image into a binary image where the grid is highlighted.
         spacingReductionMethod (??, optional):Takes a list of distances between detected grid lines and estimates
                 the grid size (note that some lines may be missing). Defaults to common.mode.
     """
