@@ -1,1 +1,1 @@
-from .signal import extractSignalFromImage, verticallyScaleECGSignal, zeroECGSignal
+from .signal import ecgSignalSamplingPeriod, extractSignalFromImage, verticallyScaleECGSignal, zeroECGSignal
