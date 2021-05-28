@@ -37,7 +37,7 @@ def cropped(inputImage: np.ndarray, crop: Union[Rectangle, Boundaries]):
         x, y, w, h = crop.x, crop.y, crop.width, crop.height
         crop = Boundaries(x, x+w, y, y+h)
 
-    return np.copy(inputImage._image[crop.fromY:crop.toY, crop.fromX:crop.toX])
+    return np.copy(inputImage[crop.fromY:crop.toY, crop.fromX:crop.toX])
 
 
 def rotated(inputImage: np.ndarray, angle: float, border: Tuple[int] = (255,255,255)):
