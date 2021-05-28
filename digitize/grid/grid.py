@@ -4,8 +4,8 @@ Created February 17, 2021
 
 Provides methods for identifying the size and location of the grid in images of leads.
 """
-from . import common
-from . import vision
+from .. import common
+from .. import vision
 
 
 def extractGridFromImage(image, spacingReductionMethod=common.mode):
