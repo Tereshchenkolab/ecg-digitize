@@ -24,7 +24,7 @@ pyenv install 3.6.7
 1. Use `pyenv` to create a virtual environment for the project. 
 
     ```bash
-    pyenv virtualenv 3.6.7 digitize-ecg
+    pyenv virtualenv 3.6.7 ecg-digitize
     ```
 
 2. Navigate to the project root directory (`.../paper-ecg/`) and assign the virtual environment you just created to the current directory (this automatically activates the environment).
