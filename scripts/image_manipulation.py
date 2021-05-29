@@ -7,10 +7,10 @@ import cv2
 import numpy as np
 
 # Super janky but makes backwards compatibility easier
-from digitize.Vision import getLinesInDirection
-from digitize.Visualization import *
-from digitize.Common import *
-from digitize.GridDetection import *
+from ecgdigitize.Vision import getLinesInDirection
+from ecgdigitize.Visualization import *
+from ecgdigitize.Common import *
+from ecgdigitize.GridDetection import *
 
 
 def removeNonGridLines(lines, threshold):

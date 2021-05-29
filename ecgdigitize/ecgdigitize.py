@@ -1,9 +1,3 @@
-"""
-digitize.py
-
-High-level API.
-"""
-from math import pi
 from . import common
 from .grid import detection as grid_detection
 from . import vision

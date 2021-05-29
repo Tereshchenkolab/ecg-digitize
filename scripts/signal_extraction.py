@@ -14,10 +14,10 @@ from cv2 import data
 import matplotlib.pyplot as plt
 from cv2 import imread as loadImage
 
-from digitize.SignalExtraction._SignalExtraction import *
-from digitize.SignalDetection import *
-from digitize.Vision import *
-from digitize.Visualization import *
+from ecgdigitize.SignalExtraction._SignalExtraction import *
+from ecgdigitize.SignalDetection import *
+from ecgdigitize.Vision import *
+from ecgdigitize.Visualization import *
 
 
 

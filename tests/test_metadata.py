@@ -1,6 +1,6 @@
 import pathlib
 
-from digitize import lead, metadata
+from ecgdigitize import lead, metadata
 
 
 def testCroppingToDict():

@@ -10,9 +10,9 @@ from cv2 import imread as loadImage
 import numpy as np
 import scipy.signal
 
-from digitize import Visualization
-from digitize import Vision
-from digitize.GridExtraction import estimateFrequencyViaAutocorrelation
+from ecgdigitize import visualization
+from ecgdigitize import vision
+from ecgdigitize import grid as grid_extraction
 
 
 # image = loadImage("lead-pictures/slighty-noisey-aVL.png")
