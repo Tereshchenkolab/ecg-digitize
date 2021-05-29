@@ -1,4 +1,4 @@
-# `digitize-ecg`
+# `ecg-digitize`
 
 A library and command-line tool for digitizing electrocardiograms images
 
