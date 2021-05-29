@@ -1,6 +1,6 @@
 # `ecg-digitize`
 
-A library and command-line tool for digitizing electrocardiograms images
+A library for generating digital signals from Electrocardiogram images
 
 
 ## Getting Started
