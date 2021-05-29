@@ -1,6 +1,6 @@
 # `ecg-digitize`
 
-A library for generating digital signals from Electrocardiogram images
+A library for generating digital signals from electrocardiogram images
 
 
 ## Getting Started
