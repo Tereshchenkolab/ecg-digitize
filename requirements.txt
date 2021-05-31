@@ -6,6 +6,5 @@ qimage2ndarray
 
 # Helper
 matplotlib
-mypy
 pathlib
 dataclasses

@@ -1,25 +1,12 @@
 import os
-
-from numpy.core.fromnumeric import mean, trace
-
-from ecgdigitize import image
+from typing import Iterable
 if 'PYTHONPATH' not in os.environ:
     print("Error: Run `source env.sh` to be able to run `/scripts/*.py`")
     exit(1)
 
-from time import time
-from typing import Optional
 from pathlib import Path
-
-import cv2
-from cv2 import imread as loadImage
 import matplotlib.pyplot as plt
-import numpy as np
-import scipy.signal
 
-from ecgdigitize import visualization
-from ecgdigitize.grid import extraction as grid_extraction
-from ecgdigitize.image import ColorImage, GrayscaleImage, openImage, saveImage
 
 LEAD_PICTURES = [
     'lead-pictures/002-49853179.png',
@@ -66,50 +53,23 @@ LEAD_PICTURES = [
     'lead-pictures/slighty-noisey-aVL.png',
 ]
 
-# image = loadImage("lead-pictures/slighty-noisey-aVL.png")
-# image = loadImage("lead-pictures/007-cropped.jpeg")
-# image = loadImage("lead-pictures/II.png")  # TODO: Work on handling this
-# image = loadImage("lead-pictures/fullscan-II.png")  # Human-estimated grid size: 7.8791666667
 
-acTimes = []
-traceTimes = []
+def printLiteralList(elements: Iterable):
+    print('[')
+    for element in elements:
+        print(f"    '{element}',")
+    print(']')
 
-for path in LEAD_PICTURES:
-    inputImage = openImage(Path(path))
+def listAvailableLeadPictures(asLiteralList: bool = False):
+    leadPicturesDirectory = Path("./lead-pictures")
+    paths = sorted(leadPicturesDirectory.iterdir())
 
-    assert inputImage is not None
-    height, width, depth = inputImage.data.shape
-
-    # Processing
-    greyscale = inputImage.toGrayscale()
-    adjusted: GrayscaleImage = greyscale.whitePointAdjusted()
-    binary = adjusted.toBinary(threshold=230)
+    if asLiteralList:
+        printLiteralList(paths)
+    else:
+        for path in paths:
+            print(path)
 
 
-    start = time()
-    gridSpacing = grid_extraction.estimateFrequencyViaAutocorrelation(binary.data)
-    acTimes.append(time() - start)
-
-    start = time()
-    tracedSpacing = grid_extraction.traceGridlines(binary, int(inputImage.width * 0.7))
-    traceTimes.append(time() - start)
-
-    print(gridSpacing, tracedSpacing, f"({path})")
-
-    if gridSpacing is None:
-        continue
-
-    columnDensity = np.sum(binary.data, axis=0)
-    maxStrength = max(columnDensity)
-    minStrength = maxStrength / 2
-    peaks, _ = scipy.signal.find_peaks(columnDensity, height=minStrength)
-    firstColumn = peaks[0]
-
-    output = inputImage.data.copy()
-
-    for column in np.arange(firstColumn, width, gridSpacing):
-        cv2.line(output, (round(column), 0), (round(column), height-1), (255, 20, 100), thickness=1)
-
-    saveImage(ColorImage(output), Path(f'validation/grid/{Path(path).name}'))
-
-print(mean(acTimes), mean(traceTimes))
+if __name__ == "__main__":
+    listAvailableLeadPictures()

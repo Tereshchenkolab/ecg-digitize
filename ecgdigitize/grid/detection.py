@@ -7,37 +7,41 @@ Converts a color image to binary mask of the grid.
 import cv2
 import numpy as np
 
+from ..image import BinaryImage, ColorImage
 from .. import vision
 from ..signal import detection as signal_detection
 
 
-def kernelApproach(colorImage):
-    binaryImage = vision.binarize(vision.greyscale(colorImage), 240)
+def kernelApproach(colorImage: ColorImage) -> BinaryImage:
+    binaryImage = colorImage.toGrayscale().toBinary(threshold=240)
 
-    opened = vision.openImage(binaryImage)
+    opened: np.ndarray
+    opened = vision.openImage(binaryImage.data)
     opened = vision.openImage(opened)
 
     # Subtract the opened image from the binary image
-    subtracted = cv2.subtract(binaryImage, opened)
+    subtracted: np.ndarray = cv2.subtract(binaryImage.data, opened)
 
-    final = cv2.erode(
+    final: np.ndarray = cv2.erode(
         subtracted,
         cv2.getStructuringElement(cv2.MORPH_CROSS, (2,2))
     )
 
-    from ..visualization import Color, displayImages
-    displayImages([
-        (binaryImage, Color.greyscale, "Binary"),
-        (opened, Color.greyscale, "Opened"),
-        (subtracted, Color.greyscale, "Subtracted"),
-        (final, Color.greyscale, "Final")
-    ])
+    # <- DEBUG ->
+    # from ..visualization import Color, displayImages
+    # displayImages([
+    #     (binaryImage, Color.greyscale, "Binary"),
+    #     (opened, Color.greyscale, "Opened"),
+    #     (subtracted, Color.greyscale, "Subtracted"),
+    #     (final, Color.greyscale, "Final")
+    # ])
 
-    return final
+    return BinaryImage(final)
 
-def thresholdApproach(colorImage, erode=False):
-    greyscaleImage = vision.greyscale(colorImage)
-    binaryImage = vision.binarize(greyscaleImage, 220)
+
+def thresholdApproach(colorImage: ColorImage, erode: bool =False) -> BinaryImage:
+    greyscaleImage = colorImage.toGrayscale()
+    binaryImage = greyscaleImage.toBinary(threshold=220)
 
     signalImage = signal_detection.mallawaarachchi(colorImage, useBlur=True, invert=True)
     dilatedSignal = cv2.dilate(
@@ -45,8 +49,9 @@ def thresholdApproach(colorImage, erode=False):
         cv2.getStructuringElement(cv2.MORPH_DILATE, (5,5))
     )
 
-    subtracted = cv2.subtract(binaryImage, dilatedSignal)
+    subtracted: np.ndarray = cv2.subtract(binaryImage, dilatedSignal)
 
+    # <- DEBUG ->
     # from ..visualization import Color, displayImages
     # displayImages([
     #     (binaryImage, Color.greyscale, "Binary"),
@@ -64,9 +69,14 @@ def thresholdApproach(colorImage, erode=False):
         return subtracted
 
 
-def allDarkPixels(colorImage: np.ndarray):
-    greyscale = vision.greyscale(colorImage)
-    #
-    adjusted = vision.adjustWhitePoint(greyscale, strength=1.0)
-    binary = vision.binarize(adjusted, 230)
+def allDarkPixels(colorImage: ColorImage) -> BinaryImage:
+    grayscale = colorImage.toGrayscale()
+
+    # Adjusts the exposure of the image so that the most common pixel is pure white
+    # This helps to normalize for variation in the greyness of the paper
+    adjusted = grayscale.whitePointAdjusted()
+
+    # Now that we have applied some normalization,
+    binary = adjusted.toBinary(threshold=230)
+
     return binary
