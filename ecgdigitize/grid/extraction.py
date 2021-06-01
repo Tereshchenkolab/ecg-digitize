@@ -100,9 +100,9 @@ def estimateFrequencyViaAutocorrelation(binaryImage: np.ndarray) -> Union[float,
         # return common.mean([columnFrequency, rowFrequency])
         return columnFrequency
         # return rowFrequency
-    elif columnFrequency is None:
+    elif rowFrequency:
         return rowFrequency
-    elif rowFrequency is None:
+    elif columnFrequency:
         return columnFrequency
     else:
         return common.Failure("Unable to estimate the frequency of the grid in either directions.")

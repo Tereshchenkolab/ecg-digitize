@@ -1,3 +1,4 @@
+from ecgdigitize.common import Failure
 import os
 
 from numpy.core.fromnumeric import mean, trace
@@ -105,10 +106,11 @@ for path in LEAD_PICTURES:
     peaks, _ = scipy.signal.find_peaks(columnDensity, height=minStrength)
     firstColumn = peaks[0]
 
-    output = inputImage.data.copy()
+    output = inputImage.toGrayscale().toColor().data
 
-    for column in np.arange(firstColumn, width, gridSpacing):
-        cv2.line(output, (round(column), 0), (round(column), height-1), (255, 20, 100), thickness=1)
+    if not isinstance(gridSpacing, Failure):
+        for column in np.arange(firstColumn, width, gridSpacing):
+            cv2.line(output, (round(column), 0), (round(column), height-1), (85, 19, 248), thickness=1)
 
     saveImage(ColorImage(output), Path(f'validation/grid/{Path(path).name}'))
 

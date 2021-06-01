@@ -4,7 +4,7 @@ Created February 17, 2021
 
 Provides methods for extracting digital signal from lead images.
 """
-from typing import Iterable, Optional, Tuple
+from typing import Generator, Iterable, Iterator, Optional, Tuple
 import numpy as np
 from math import sqrt, asin, pi
 
@@ -13,7 +13,7 @@ from .. import common
 
 def findFirstLastNonZeroPixels(oneDimImage: np.ndarray) ->Tuple[Optional[int], Optional[int]]:
 
-    def reverseEnumerate(array: np.ndarray):
+    def reverseEnumerate(array: np.ndarray) -> Iterator[Tuple[int, int]]:
         for index in common.reversedRange(len(array)):
             yield index, array[index]
 
@@ -29,7 +29,7 @@ def findFirstLastNonZeroPixels(oneDimImage: np.ndarray) ->Tuple[Optional[int], O
     return top, bottom
 
 
-def naïveHorizontalScan(image: np.ndarray):
+def naïveHorizontalScan(image: np.ndarray) -> np.ndarray:
     columns = np.swapaxes(image, 0, 1)
     output  = np.zeros(len(columns))
 

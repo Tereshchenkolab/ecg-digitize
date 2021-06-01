@@ -66,23 +66,25 @@ LEAD_PICTURES = [
 ]
 
 
-def detectSignal(image: ColorImage, otsuHedging: int = 0.6) -> BinaryImage:
+def adaptiveSignalIsolation(image: ColorImage) -> BinaryImage:
+    maxHedge = 1
+    minHedge = 0.6  # 0.5
+
     grayscaleImage = image.toGrayscale()
-    threshold = otsu.otsuThreshold(grayscaleImage) * otsuHedging
-    _, binary = cv2.threshold(image.toGrayscale().data, threshold, 1, cv2.THRESH_BINARY_INV)
+    otsuThreshold = otsu.otsuThreshold(grayscaleImage)
 
     hedging = float(maxHedge)
-    binary = detectSignal(image, otsuHedging=hedging, erosions=0, dilations=0)
+    binary = grayscaleImage.toBinary(otsuThreshold * hedging)
 
     while estimateFrequencyViaAutocorrelation(binary.data):
         hedging -= 0.05  # TODO: More intelligent choice of step
         if hedging < minHedge:
             break
 
-        binary = detectSignal(image, otsuHedging=hedging, erosions=0, dilations=0)
+        binary = grayscaleImage.toBinary(otsuThreshold * hedging)
 
 
-    return BinaryImage(binary)
+    return binary
 
 
 def denoise(image: BinaryImage, kernelSize: int = 3, erosions: int = 1, dilations: int = 1) -> BinaryImage:
@@ -132,14 +134,12 @@ def getAdjacent(pointsByColumn, bestPathToPoint, startingColumn, minimumLookBack
         yield pointScore, point, pointAngle
 
 
-def extractSignal(binary: BinaryImage):
+def extractSignal(binary: BinaryImage) -> Optional[np.ndarray]:
     pointsByColumn = getPointLocations(binary.data)
     points = np.array(common.flatten(pointsByColumn))
 
-    # plt.figure(figsize=(20,40))
-    # plt.imshow(binary * -1 + np.full_like(binary, 1), cmap='Greys')
-    # plt.scatter(points[:,1], points[:,0], s=1, c='violet')
-    # plt.show()
+    if len(points) == 0:
+        return None
 
     minimumLookBack = 1
 
@@ -169,10 +169,17 @@ def extractSignal(binary: BinaryImage):
 
     # TODO: Search backward in some 2D area for the best path ?
     OPTIMAL_ENDING_WIDTH = 20
-    optimalCandidates = getAdjacent(pointsByColumn, bestPathToPoint, startingColumn=image.width, minimumLookBack=OPTIMAL_ENDING_WIDTH)
-    _, current = min([(totalScore, point) for totalScore, point, _ in optimalCandidates])
+    optimalCandidates = list(getAdjacent(pointsByColumn, bestPathToPoint, startingColumn=image.width, minimumLookBack=OPTIMAL_ENDING_WIDTH))
 
-    print(current)
+    if len(optimalCandidates) == 0:
+        scores = [bestPathToPoint[y][x][0] ** .5 for x,y in points]
+        print(points)
+        plt.imshow(image.toGrayscale().data, cmap='Greys')
+        plt.scatter(points[:,1], points[:,0], c=scores)
+        # plt.plot(signal, c='purple')
+        plt.show()
+
+    _, current = min([(totalScore, point) for totalScore, point, _ in optimalCandidates])
 
     bestPath = []
 
@@ -189,30 +196,20 @@ def extractSignal(binary: BinaryImage):
     return signal
 
 
-    scores = [bestPathToPoint[y][x][0] ** .5 for x,y in points]
 
-    # # plt.imshow((binary * -1 + np.full_like(binary, 1)) * .1, cmap='Greys')
-    # plt.imshow(image.toGrayscale().data, cmap='Greys')
-    # plt.scatter(points[:,1], points[:,0], c=scores)
-    # plt.plot(signal, c='purple')
-    # plt.show()
-
-
-maxHedge = 1
-minHedge = 0.6  # 0.5
 
 for path in LEAD_PICTURES:
     image = openImage(Path(path))
 
-
-    print(str(path), '\t', hedging)
-
-    # plt.imshow(binary * -1 + np.full_like(binary, 1), cmap='Greys')
-    # plt.show()
-
+    # (1) Color -> Binary
+    binary = adaptiveSignalIsolation(image)
+    # (2) Binary -> Signal
     signal = extractSignal(binary)
-    output = visualization.overlaySignalOnImage(signal, binary.toColor())
 
+    if signal is not None:
+        output = visualization.overlaySignalOnImage(signal, binary.toColor())
+    else:
+        output = binary.toColor()
 
     saveImage(output, Path(f"validation/signal/{Path(path).name}"))
 

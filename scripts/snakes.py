@@ -14,6 +14,8 @@ from time import time, sleep
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.polynomial import Polynomial
+from numpy.polynomial.polynomial import polyval, polyvalfromroots
 
 from ecgdigitize import otsu, vision, visualization, image, common
 from ecgdigitize.image import BinaryImage, ColorImage, GrayscaleImage, openImage
@@ -47,12 +49,32 @@ def denoise(image: BinaryImage, kernelSize: int = 3, erosions: int = 1, dilation
     return dilated
 
 
+def finiteDifferences(x: np.ndarray, order: int = 1, direction: str = 'forward'):
+    assert direction in {'forward', 'backward', 'central'}
+
+    deltas = x[1:] - x[:-1]
+    outputs = np.zeros_like(x)
+
+    for index in range(len(outputs)):
+        if direction == 'forward':
+            if index == len(x) - 1:
+                continue
+            outputs[index] = deltas[index]
+
+        # outputs[index] =
+
+    if order == 1:
+        return outputs
+    else:
+        return derivative(outputs, order-1)
+
+
 def derivative(x: np.ndarray, order: int = 1, width: int = 1) -> np.ndarray:
-    changes = x[1:] - x[:-1]
+    deltas = x[1:] - x[:-1]
     outputs = np.zeros_like(x)
 
     for index in range(width, len(outputs) - width):
-        outputs[index] = np.sum(changes[(index - width):(index + width - 1)]) / 2
+        outputs[index] = np.sum(deltas[(index - width):(index + width + 1)]) / len(deltas)
 
     # differences = np.diff(x)
     # outputs = np.append(differences, differences[-1:])
@@ -61,7 +83,49 @@ def derivative(x: np.ndarray, order: int = 1, width: int = 1) -> np.ndarray:
     if order == 1:
         return outputs
     else:
-        return derivative(outputs, order-1)
+        return derivative(common.padRight(outputs[1:], 1, fillValue=0), order-1)
+
+
+def differentiateContour(xs: np.ndarray, width: int = 1) -> np.ndarray:
+    firstOrder = np.zeros_like(xs)
+    secondOrder = np.zeros_like(xs)
+    thirdOrder = np.zeros_like(xs)
+    fourthOrder = np.zeros_like(xs)
+
+    for index in range(width, len(xs) - width):
+
+        x = np.arange(-width, width + 1)
+        y = xs[(index - width):(index + width + 1)]
+
+        # print(y)
+
+        f = Polynomial.fit(x, y, deg=4)
+        f1 = f.deriv()
+        f2 = f1.deriv()
+        f3 = f2.deriv()
+        f4 = f3.deriv()
+
+        # xFine = np.arange(-width, width, step=0.001)
+
+        # plt.plot(x, y)
+        # plt.plot(xFine, polyval(xFine, f.coef))
+        # plt.plot(xFine, polyval(xFine, f1.coef))
+        # plt.show()
+
+        firstOrder[index] = polyval(0, f1.coef)
+        secondOrder[index] = polyval(0, f2.coef)
+        thirdOrder[index] = polyval(0, f3.coef)
+        fourthOrder[index] = polyval(0, f4.coef)
+
+    # plt.plot(xs)
+    # plt.plot(firstOrder)
+    # plt.plot(secondOrder)
+    # plt.plot(thirdOrder)
+    # plt.plot(fourthOrder)
+    # plt.show()
+
+    return secondOrder, fourthOrder
+
 
 def generateImageEnergy(image: BinaryImage) -> np.ndarray:
     outputs = np.full_like(image.data, image.height, dtype=float)
@@ -87,10 +151,10 @@ def generateImageEnergy(image: BinaryImage) -> np.ndarray:
     return outputs / np.max(outputs)
 
 def snakes(binaryImage: BinaryImage):
-    alpha = 0
-    beta = 0
-    external = 20
-    step = 1
+    alpha = 10
+    beta = 20
+    external = 1
+    step = 5
 
     greyscale = binaryImage.toColor().toGrayscale()
 
@@ -99,12 +163,14 @@ def snakes(binaryImage: BinaryImage):
     ])
 
     imageEnergy = generateImageEnergy(binaryImage)
-    plt.imshow(imageEnergy)
-    plt.show()
+    # plt.imshow(imageEnergy)
+    # plt.show()
 
-    for iteration in range(10):
-        F_cont = alpha * derivative(contour, 2, width=5)
-        F_curv = beta * derivative(contour, 4, width=5)
+    for iteration in range(2):
+        secondDerivate, fourthDerivative = finiteDifferences(contour, 2), finiteDifferences(contour, 4) # differentiateContour(contour, width=2) #
+
+        F_cont = -alpha * secondDerivate  # derivative(contour, 2, width=10)
+        F_curv = beta * fourthDerivative  # derivative(contour, 4, width=10)
 
         F_image = np.array([imageEnergy[int(y)][x] for x, y in enumerate(contour)]) # TODO: Smooth interpolation instead of int
 
@@ -117,24 +183,33 @@ def snakes(binaryImage: BinaryImage):
 
         progress = greyscale.toColor()
 
-        progress = visualization.overlaySignalOnImage(derivative(contour, 1, width=5) + image.height // 2, progress, lineWidth=1, color=(236,130,80))
-        progress = visualization.overlaySignalOnImage(derivative(contour, 2, width=5) + image.height // 2, progress, lineWidth=1, color=(30,236,220))
-        progress = visualization.overlaySignalOnImage(F_image * 10 + image.height // 2, progress, lineWidth=1, color=(80,250,30))
-        # progress = visualization.overlaySignalOnImage(F, progress, lineWidth=1, color=(30,236,180))
-        progress = visualization.overlaySignalOnImage(contour, progress, lineWidth=1)
-        visualization.displayImage(progress, title=str(iteration))
+        plt.plot(contour)
+        plt.plot(secondDerivate * 20 + image.height // 2)
+        plt.plot(fourthDerivative * 20 + image.height // 2)
+        plt.show()
+
+        # progress = visualization.overlaySignalOnImage(derivative(contour, 1, width=10) + image.height // 2, progress, lineWidth=1, color=(236,130,80))
+        # progress = visualization.overlaySignalOnImage(derivative(contour, 2, width=10) + image.height // 2, progress, lineWidth=1, color=(30,236,220))
+
+        # progress = visualization.overlaySignalOnImage(secondDerivate + image.height // 2, progress, lineWidth=1, color=(236,130,80))
+        # progress = visualization.overlaySignalOnImage(fourthDerivative + image.height // 2, progress, lineWidth=1, color=(30,236,220))
+
+        # progress = visualization.overlaySignalOnImage(F_image * 10 + image.height // 2, progress, lineWidth=1, color=(80,250,30))
+        # # # progress = visualization.overlaySignalOnImage(F, progress, lineWidth=1, color=(30,236,180))
+        # progress = visualization.overlaySignalOnImage(contour, progress, lineWidth=1)
+        # visualization.displayImage(progress, title=str(iteration))
 
         contour = contour - (step * F)
-        contour = np.clip(contour, 0, image.height)
+        contour = np.clip(contour, 0, image.height - 1)
 
         if 'not converged': continue
         else              : break
 
 # path = "lead-pictures/slighty-noisey-aVL-small.png"
-path = "lead-pictures/007-cropped.jpeg"
+# path = "lead-pictures/007-cropped.jpeg"
 # path = "lead-pictures/II.png"
 # path = "lead-pictures/slighty-noisey-aVL-tiny.png"
-# path = "lead-pictures/I.png"
+path = "lead-pictures/I.png"
 
 image = openImage(Path(path))
 
@@ -142,9 +217,12 @@ binary = detectSignal(image, otsuHedging=0.6, erosions=0, dilations=0)
 
 snakes(binary)
 
-# inputs = np.array([0,0,0,10,0,0,0])
+# inputs = np.array([0,5,6,10,8,3,0])
+# finiteDifferences(inputs)
 
 # plt.plot(inputs)
 # plt.plot(np.diff(inputs))
-# plt.plot(derivative(inputs))
+# plt.plot(finiteDifferences(inputs))
+# plt.plot(finiteDifferences(inputs, order=2))
+# plt.plot(finiteDifferences(inputs, order=4))
 # plt.show()

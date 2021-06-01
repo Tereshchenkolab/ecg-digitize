@@ -47,7 +47,7 @@ def lowerClamp(value: Numeric, limit: Numeric) -> Numeric:
     return value if (value > limit) else limit
 
 
-def mapList(elements: Iterable[A], func: Callable[[A], B]) -> List[B]:
+def mapList(elements: Iterable[A], func: Callable[[A], B]) -> 'List[B]':
     return list(map(func, elements))
 
 
@@ -60,11 +60,11 @@ def flatMap(elements: Iterable[A], func: Callable[[A], Iterable[Iterable[B]]]) -
     return flatten(mapList(elements, func))
 
 
-def filterList(elements: Iterable[A], func: Callable[[A], A]) -> Iterable[A]:
+def filterList(elements: Iterable[A], func: Callable[[A], A]) -> 'List[A]':
     return list(filter(func, elements))
 
 
-def calculateDistancesBetweenValues(sortedList):
+def calculateDistancesBetweenValues(sortedList: Union[List, np.ndarray]) -> "List[float]":
     spacings = [y-x for (x, _), (y, _) in zip(sortedList[0:-1], sortedList[1:])]
     return spacings
 

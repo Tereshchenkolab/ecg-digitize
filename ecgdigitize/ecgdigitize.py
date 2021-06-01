@@ -1,13 +1,14 @@
+from typing import Optional
+from ecgdigitize.image import ColorImage
 from . import common
 from .grid import detection as grid_detection
 from . import vision
 
 
-def estimateRotationAngle(image, houghThresholdFraction=0.25):
+def estimateRotationAngle(image: ColorImage, houghThresholdFraction: float = 0.25) -> Optional[float]:
     binaryImage = grid_detection.thresholdApproach(image)
 
-    _, width = image.shape[:2] if len(image.shape) == 3 else image.shape
-    houghThreshold = int(width * houghThresholdFraction)
+    houghThreshold = int(image.width * houghThresholdFraction)
     lines = vision.houghLines(binaryImage, houghThreshold)
 
     angles = common.mapList(lines, vision.houghLineToAngle)

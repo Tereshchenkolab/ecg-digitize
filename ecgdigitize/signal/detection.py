@@ -4,18 +4,19 @@ Created May 23, 2021
 
 Converts a color image to binary mask of the lead's curve.
 """
+from .. import otsu
+from ecgdigitize.image import BinaryImage, ColorImage
 from .. import vision
 
 
-def mallawaarachchi(image, useBlur: bool = False, invert: bool = True):
+def mallawaarachchi(image: ColorImage, useBlur: bool = False, invert: bool = True) -> BinaryImage:
     """The most straightforward implementation of binarization from Mallawaarachchi et. al., 2014"""
 
     # "The first [this] method tends to preserve significantly more information than the second does. For traces with minimal
     #  information, the first method will be more suitable. For newer traces, the second method [CIE-LAB color space] gives
     #  better results."
-    greyscaleImage = vision.greyscale(image)
-
     # TODO: Implement CIE-LAB color space approach
+    greyscaleImage = image.toGrayscale()
 
     # Apply blur to reduce noise (⚠️ not in the paper)
     if useBlur:
@@ -24,7 +25,6 @@ def mallawaarachchi(image, useBlur: bool = False, invert: bool = True):
         blurredImage = greyscaleImage
 
     # Get the threshold using the method from Otsu
-    threshold = vision.otsuThresholdSelection(blurredImage)
+    binaryImage = blurredImage.toBinary(inverse=invert)
 
-    binaryImage = vision.binarize(blurredImage, threshold, invert)
     return binaryImage
