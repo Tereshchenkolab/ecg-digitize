@@ -195,7 +195,7 @@ def extractSignal(binary: BinaryImage) -> Optional[np.ndarray]:
     for column in pointsByColumn[1:]:
         for point in column:
             # Gather all other points in the perview of search for the current point
-            adjacent = list(getAdjacent(pointsByColumn, bestPathToPoint, point.x, minimumLookBack))
+            adjacent = list(getAdjacent(pointsByColumn, bestPathToPoint, point.index, minimumLookBack))
 
             if len(adjacent) == 0:
                 bestPathToPoint[point] = (float('inf'), None, 0)
@@ -221,7 +221,10 @@ def extractSignal(binary: BinaryImage) -> Optional[np.ndarray]:
         # plt.plot(signal, c='purple')
         plt.show()
 
-    _, current = min([(totalScore, point) for totalScore, point, _ in optimalCandidates])
+    _, current = min(
+        [(totalScore, point) for totalScore, point, _ in optimalCandidates],
+        key=lambda pair: pair[0] # Just minimize by the score
+    )
 
     bestPath = []
 

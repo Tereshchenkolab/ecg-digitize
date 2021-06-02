@@ -125,12 +125,12 @@ def saveImage(image: Image, path: Path) -> None:
 
 # TODO: This takes waaayyy to long for practical use
 def getMode(inputImage: np.ndarray) -> Tuple[int, int, int]:
-        """Gets the mode (most common) pixel color value in the image. Used to fill borders when rotating."""
-        firstModes = stats.mode(inputImage, axis=0)
-        modeResults = stats.mode(firstModes.mode, axis=1).mode[0][0]
-        modeValues = tuple(map(int, modeResults))
+    """Gets the mode (most common) pixel color value in the image. Used to fill borders when rotating."""
+    firstModes = stats.mode(inputImage, axis=0)
+    modeResults = stats.mode(firstModes.mode, axis=1).mode[0][0]
+    modeValues = tuple(map(int, modeResults))
 
-        return modeValues
+    return modeValues
 
 
 @dataclasses.dataclass(frozen=True)
@@ -149,27 +149,41 @@ class Boundaries:
     toY: int
 
 
-def cropped(inputImage: np.ndarray, crop: Union[Rectangle, Boundaries]):
+def cropped(inputImage: Image, crop: Union[Rectangle, Boundaries]) -> Image:
     if isinstance(crop, Rectangle):
         x, y, w, h = crop.x, crop.y, crop.width, crop.height
         crop = Boundaries(x, x+w, y, y+h)
 
-    return np.copy(inputImage[crop.fromY:crop.toY, crop.fromX:crop.toX])
+    outputData = inputImage.data.copy()
+    croppedData = outputData[crop.fromY:crop.toY, crop.fromX:crop.toX]
+
+    if isinstance(inputImage, ColorImage):
+        return ColorImage(croppedData)
+    elif isinstance(inputImage, GrayscaleImage):
+        return GrayscaleImage(croppedData)
+    elif isinstance(inputImage, BinaryImage):
+        return BinaryImage(croppedData)
+    else:
+        raise ValueError
 
 
-def rotated(inputImage: np.ndarray, angle: float, border: Tuple[int] = (255,255,255)):
-    height, width = inputImage.shape[:2]
-    center = (width // 2, height // 2)
-
+def rotated(inputImage: Image, angle: float, border: Tuple[int, int, int] = (255,255,255)) -> Image:
+    center = (inputImage.width // 2, inputImage.height // 2)
     rotationMatrix = cv2.getRotationMatrix2D(center, angle, 1.0)
-
-    rotated = cv2.warpAffine(
-        inputImage,
+    rotatedData = cv2.warpAffine(
+        inputImage.data,
         rotationMatrix,
-        (width, height),
+        (inputImage.width, inputImage.height),
         flags=cv2.INTER_CUBIC,
         borderMode=cv2.BORDER_CONSTANT,
         borderValue=border,
     )
 
-    return rotated
+    if isinstance(inputImage, ColorImage):
+        return ColorImage(rotatedData)
+    elif isinstance(inputImage, GrayscaleImage):
+        return GrayscaleImage(rotatedData)
+    elif isinstance(inputImage, BinaryImage):
+        return BinaryImage(rotatedData)
+    else:
+        raise ValueError
