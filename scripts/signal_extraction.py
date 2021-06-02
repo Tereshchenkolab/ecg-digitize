@@ -8,6 +8,7 @@ if 'PYTHONPATH' not in os.environ:
     print("Error: Run `source env.sh` to be able to run `/scripts/*.py`")
     exit(1)
 
+import ecgdigitize
 from ecgdigitize import visualization
 from ecgdigitize.image import BinaryImage, ColorImage, openImage, saveImage
 from ecgdigitize.signal import detection as signal_detection
@@ -80,10 +81,8 @@ def validate():
 def testSingle(path: str):
     image = openImage(Path(path))
 
-    # (1) Color -> Binary
     binary = signal_detection.adaptive(image)
-    # (2) Binary -> Signal
-    signal = viterbi.extractSignal(binary)
+    signal = ecgdigitize.digitizeSignal(image)
 
     if signal is not None:
         output = visualization.overlaySignalOnImage(signal, binary.toColor())
@@ -94,8 +93,8 @@ def testSingle(path: str):
 
 
 if __name__ == "__main__":
-    # validate()
-    testSingle('lead-pictures/SOHSU10121052013140_0001-50298946.png')
+    validate()
+    # testSingle('lead-pictures/SOHSU10121052013140_0001-50298946.png')
 
 
 # TODO:

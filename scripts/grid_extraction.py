@@ -3,7 +3,6 @@ import os
 
 from numpy.core.fromnumeric import mean, trace
 
-from ecgdigitize import image
 if 'PYTHONPATH' not in os.environ:
     print("Error: Run `source env.sh` to be able to run `/scripts/*.py`")
     exit(1)
@@ -18,6 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.signal
 
+import ecgdigitize
 from ecgdigitize import visualization
 from ecgdigitize.grid import detection as grid_detection
 from ecgdigitize.grid import extraction as grid_extraction
@@ -80,10 +80,11 @@ for path in LEAD_PICTURES:
     inputImage = openImage(Path(path))
     assert inputImage is not None
 
-    # (1) Color -> Binary
+    # For visualization
     binary = grid_detection.allDarkPixels(inputImage)
-    # (2) Binary -> Grid
-    gridSpacing = grid_extraction.estimateFrequencyViaAutocorrelation(binary.data)
+
+    # Actual call
+    gridSpacing = ecgdigitize.digitizeGrid(inputImage)
 
     print(gridSpacing, f"({path})")
 

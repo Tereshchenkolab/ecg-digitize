@@ -53,7 +53,7 @@ def digitizeSignal(
     if extractionMethod == SignalExtractionMethod.default:
         signal = viterbi.extractSignal(binary)
     else:
-        raise ValueError("Unrecognized SignalDetectionMethod in `digitizeSignal`")
+        raise ValueError("Unrecognized SignalExtractionMethod in `digitizeSignal`")
 
     return signal
 
@@ -72,17 +72,17 @@ def digitizeGrid(
     extractionMethod: GridExtractionMethod = GridExtractionMethod.default
 ) -> Union[float, common.Failure]:  # Returns size of grid in pixels
     # First, convert color image to binary image where grid pixels are turned on (1) and all others are off (0)
-    if detectionMethod == SignalDetectionMethod.default:
+    if detectionMethod == GridDetectionMethod.default:
         # Nothing intelligent; just gets all non-white pixels
         binary = grid_detection.allDarkPixels(image)
     else:
-        raise ValueError("Unrecognized SignalDetectionMethod in `digitizeSignal`")
+        raise ValueError("Unrecognized GridDetectionMethod in `digitizeGrid`")
 
     # Second, analyze the binary image to estimate the grid spacing (period)
-    if extractionMethod == SignalExtractionMethod.default:
+    if extractionMethod == GridExtractionMethod.default:
         gridPeriod = grid_extraction.estimateFrequencyViaAutocorrelation(binary.data)
     else:
-        raise ValueError("Unrecognized SignalDetectionMethod in `digitizeSignal`")
+        raise ValueError("Unrecognized GridExtractionMethod in `digitizeSignal`")
 
     return gridPeriod
 

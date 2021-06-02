@@ -11,10 +11,10 @@ import numpy as np
 from . import frequency as grid_frequency
 from .. import common
 from .. import vision
-from .. import image
+from ..image import BinaryImage
 
 
-def traceGridlines(binaryImage: image.BinaryImage, houghThreshold: int = 80) -> Optional[float]:
+def traceGridlines(binaryImage: BinaryImage, houghThreshold: int = 80) -> Optional[float]:
     lines = vision.houghLines(binaryImage, houghThreshold)
 
     # from .. import visualization
