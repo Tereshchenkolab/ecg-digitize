@@ -52,7 +52,7 @@ def mapList(elements: Iterable[A], func: Callable[[A], B]) -> 'List[B]':
 
 
 def flatten(listOfLists: Iterable[Iterable[A]]) -> Iterable[A]:
-    return [e for _list in listOfLists for e in _list]
+    return (e for _list in listOfLists for e in _list)
 
 
 def flatMap(elements: Iterable[A], func: Callable[[A], Iterable[Iterable[B]]]) -> Iterable[B]:

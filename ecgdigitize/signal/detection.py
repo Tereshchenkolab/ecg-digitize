@@ -5,14 +5,17 @@ Created May 23, 2021
 Converts a color image to binary mask of the lead's curve.
 """
 import cv2
+import numpy as np
 
-from .. import otsu
-from ecgdigitize.image import BinaryImage, ColorImage
-from .. import vision
+from .. import common, otsu, vision
+from ..image import BinaryImage, ColorImage
+from ..grid import frequency as grid_frequency
 
 
-def mallawaarachchi(image: ColorImage, useBlur: bool = False, invert: bool = True) -> BinaryImage:
-    """The most straightforward implementation of binarization from Mallawaarachchi et. al., 2014"""
+def otsuDetection(image: ColorImage, useBlur: bool = False, invert: bool = True) -> BinaryImage:
+    """
+    The most straightforward implementation of binarization from Mallawaarachchi et. al., 2014 using Otsu's threshold algorithm
+    """
 
     # "The first [this] method tends to preserve significantly more information than the second does. For traces with minimal
     #  information, the first method will be more suitable. For newer traces, the second method [CIE-LAB color space] gives
@@ -32,8 +35,8 @@ def mallawaarachchi(image: ColorImage, useBlur: bool = False, invert: bool = Tru
     return binaryImage
 
 
-def denoise(image: BinaryImage, kernelSize: int = 3, erosions: int = 1, dilations: int = 1) -> BinaryImage:
-    eroded = image
+def _denoise(image: BinaryImage, kernelSize: int = 3, erosions: int = 1, dilations: int = 1) -> BinaryImage:
+    eroded = image.data
 
     for _ in range(erosions):
         eroded = cv2.erode(
@@ -52,8 +55,18 @@ def denoise(image: BinaryImage, kernelSize: int = 3, erosions: int = 1, dilation
     return BinaryImage(dilated)
 
 
+def _gridIsDetectable(image: BinaryImage) -> bool:
+    columnDensity = np.sum(image.data, axis=0)
+    columnFrequencyStrengths = common.autocorrelation(columnDensity)
+    columnFrequency = grid_frequency._estimateFirstPeakLocation(
+        columnFrequencyStrengths,
+        interpolate=False
+    )
 
-def adaptiveSignalIsolation(image: ColorImage) -> BinaryImage:
+    return not columnFrequency is None
+
+
+def adaptive(image: ColorImage, applyDenoising: bool = False) -> BinaryImage:
     maxHedge = 1
     minHedge = 0.6  # 0.5
 
@@ -63,13 +76,15 @@ def adaptiveSignalIsolation(image: ColorImage) -> BinaryImage:
     hedging = float(maxHedge)
     binary = grayscaleImage.toBinary(otsuThreshold * hedging)
 
-    while estimateFrequencyViaAutocorrelation(binary.data):
+    while _gridIsDetectable(binary):
         hedging -= 0.05  # TODO: More intelligent choice of step
         if hedging < minHedge:
             break
 
         binary = grayscaleImage.toBinary(otsuThreshold * hedging)
 
-
-    return binary
+    if applyDenoising:
+        return _denoise(binary)
+    else:
+        return binary
 

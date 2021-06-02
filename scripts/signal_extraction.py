@@ -3,21 +3,15 @@
 
 import os
 from pathlib import Path
-from typing import Tuple
+
 if 'PYTHONPATH' not in os.environ:
     print("Error: Run `source env.sh` to be able to run `/scripts/*.py`")
     exit(1)
 
-from collections import defaultdict
-
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
-
-from ecgdigitize import otsu, vision, visualization, image, common
+from ecgdigitize import visualization
 from ecgdigitize.image import BinaryImage, ColorImage, openImage, saveImage
-from ecgdigitize.signal.extraction import *
-from ecgdigitize.grid.extraction import estimateFrequencyViaAutocorrelation
+from ecgdigitize.signal import detection as signal_detection
+from ecgdigitize.signal.extraction import viterbi
 
 
 LEAD_PICTURES = [
@@ -66,111 +60,42 @@ LEAD_PICTURES = [
 ]
 
 
-# TODO: Make score multiply, or normalize the score by the length of the path
-def score(currentPoint: Tuple[int, int], candidatePoint: Tuple[int, int], candidateAngle: float):
-    DISTANCE_WEIGHT = 1
+def validate():
+    for path in LEAD_PICTURES:
+        image = openImage(Path(path))
 
-    currentAngle = angleBetweenPoints(candidatePoint, currentPoint)
-    angleValue = angleSimilarity(currentAngle, candidateAngle)
-    distanceValue = distanceBetweenPoints(currentPoint, candidatePoint)
+        # (1) Color -> Binary
+        binary = signal_detection.adaptive(image)
+        # (2) Binary -> Signal
+        signal = viterbi.extractSignal(binary)
 
-    return (distanceValue * DISTANCE_WEIGHT) + (angleValue * (1 - DISTANCE_WEIGHT))
+        if signal is not None:
+            output = visualization.overlaySignalOnImage(signal, binary.toColor())
+        else:
+            output = binary.toColor()
 
-
-def getAdjacent(pointsByColumn, bestPathToPoint, startingColumn, minimumLookBack):
-    rightColumnIndex = startingColumn
-    leftColumnIndex = common.lowerClamp(startingColumn-minimumLookBack, 0)
-
-    result = common.flatten(pointsByColumn[leftColumnIndex:rightColumnIndex])
-
-    while len(result) == 0 and leftColumnIndex >= 0:
-        leftColumnIndex -= 1
-        result = common.flatten(pointsByColumn[leftColumnIndex:rightColumnIndex])
-
-    for point in result:
-        x, y = point
-        pointScore, _, pointAngle = bestPathToPoint[y][x]
-        yield pointScore, point, pointAngle
+        saveImage(output, Path(f"validation/signal/{Path(path).name}"))
 
 
-def extractSignal(binary: BinaryImage) -> Optional[np.ndarray]:
-    pointsByColumn = getPointLocations(binary.data)
-    points = np.array(common.flatten(pointsByColumn))
-
-    if len(points) == 0:
-        return None
-
-    minimumLookBack = 1
-
-    bestPathToPoint = defaultdict(dict)
-
-    # TODO: Allow some leeway either (1) Initialize the first N columns with 0s or (2) Search until some threshold for seeding is met
-
-    # Initialize the DP table with base cases (far left side)
-    for column in pointsByColumn[:1]:
-        for x,y in column:
-            bestPathToPoint[y][x] = (0, None, 0)
-
-    # Build the table
-    for column in pointsByColumn[1:]:
-        for x, y in column:
-            # Gather all other points in the perview of search for the current point
-            adjacent = list(getAdjacent(pointsByColumn, bestPathToPoint, y, minimumLookBack))
-
-            if len(adjacent) == 0:
-                bestPathToPoint[y][x] = (float('inf'), None, 0)
-            else:
-                bestScore, bestPoint = min(
-                    [(score((x,y), candidatePoint, candidateAngle) + cadidateScore, candidatePoint)
-                    for cadidateScore, candidatePoint, candidateAngle in adjacent]
-                )
-                bestPathToPoint[y][x] = (bestScore, bestPoint, angleBetweenPoints(bestPoint, (x,y)))
-
-    # TODO: Search backward in some 2D area for the best path ?
-    OPTIMAL_ENDING_WIDTH = 20
-    optimalCandidates = list(getAdjacent(pointsByColumn, bestPathToPoint, startingColumn=image.width, minimumLookBack=OPTIMAL_ENDING_WIDTH))
-
-    if len(optimalCandidates) == 0:
-        scores = [bestPathToPoint[y][x][0] ** .5 for x,y in points]
-        print(points)
-        plt.imshow(image.toGrayscale().data, cmap='Greys')
-        plt.scatter(points[:,1], points[:,0], c=scores)
-        # plt.plot(signal, c='purple')
-        plt.show()
-
-    _, current = min([(totalScore, point) for totalScore, point, _ in optimalCandidates])
-
-    bestPath = []
-
-    while current is not None:
-        bestPath.append(current)
-        x, y = current
-        _, current, _ = bestPathToPoint[y][x]
-
-    signal = np.full(image.width, np.nan)
-
-    for row, column in bestPath:
-        signal[column] = row
-
-    return signal
-
-
-
-
-for path in LEAD_PICTURES:
+def testSingle(path: str):
     image = openImage(Path(path))
 
     # (1) Color -> Binary
-    binary = adaptiveSignalIsolation(image)
+    binary = signal_detection.adaptive(image)
     # (2) Binary -> Signal
-    signal = extractSignal(binary)
+    signal = viterbi.extractSignal(binary)
 
     if signal is not None:
         output = visualization.overlaySignalOnImage(signal, binary.toColor())
     else:
         output = binary.toColor()
 
-    saveImage(output, Path(f"validation/signal/{Path(path).name}"))
+    visualization.displayImage(output)
+
+
+if __name__ == "__main__":
+    # validate()
+    testSingle('lead-pictures/SOHSU10121052013140_0001-50298946.png')
 
 
 # TODO:
