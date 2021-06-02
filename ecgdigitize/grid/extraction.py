@@ -21,7 +21,7 @@ def traceGridlines(binaryImage: image.BinaryImage, houghThreshold: int = 80) -> 
     # from .. import visualization
     # visualization.displayImage(visualization.overlayLines(lines, binaryImage.toColor()))
 
-    def getDistancesBetween(lines: List[int], inDirection: float = 0) -> List[int]:
+    def getDistancesBetween(lines: List[int], inDirection: float = 0) -> List[float]:
         orientedLines = sorted(vision.getLinesInDirection(lines, inDirection))
         return common.calculateDistancesBetweenValues(orientedLines)
 

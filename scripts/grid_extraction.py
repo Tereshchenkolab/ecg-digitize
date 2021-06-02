@@ -19,6 +19,7 @@ import numpy as np
 import scipy.signal
 
 from ecgdigitize import visualization
+from ecgdigitize.grid import detection as grid_detection
 from ecgdigitize.grid import extraction as grid_extraction
 from ecgdigitize.image import ColorImage, GrayscaleImage, openImage, saveImage
 
@@ -77,25 +78,14 @@ traceTimes = []
 
 for path in LEAD_PICTURES:
     inputImage = openImage(Path(path))
-
     assert inputImage is not None
-    height, width, depth = inputImage.data.shape
 
-    # Processing
-    greyscale = inputImage.toGrayscale()
-    adjusted: GrayscaleImage = greyscale.whitePointAdjusted()
-    binary = adjusted.toBinary(threshold=230)
-
-
-    start = time()
+    # (1) Color -> Binary
+    binary = grid_detection.allDarkPixels(inputImage)
+    # (2) Binary -> Grid
     gridSpacing = grid_extraction.estimateFrequencyViaAutocorrelation(binary.data)
-    acTimes.append(time() - start)
 
-    start = time()
-    tracedSpacing = grid_extraction.traceGridlines(binary, int(inputImage.width * 0.7))
-    traceTimes.append(time() - start)
-
-    print(gridSpacing, tracedSpacing, f"({path})")
+    print(gridSpacing, f"({path})")
 
     if gridSpacing is None:
         continue
@@ -109,9 +99,7 @@ for path in LEAD_PICTURES:
     output = inputImage.toGrayscale().toColor().data
 
     if not isinstance(gridSpacing, Failure):
-        for column in np.arange(firstColumn, width, gridSpacing):
-            cv2.line(output, (round(column), 0), (round(column), height-1), (85, 19, 248), thickness=1)
+        for column in np.arange(firstColumn, inputImage.width, gridSpacing):
+            cv2.line(output, (round(column), 0), (round(column), inputImage.height-1), (85, 19, 248), thickness=1)
 
     saveImage(ColorImage(output), Path(f'validation/grid/{Path(path).name}'))
-
-print(mean(acTimes), mean(traceTimes))

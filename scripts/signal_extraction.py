@@ -66,47 +66,6 @@ LEAD_PICTURES = [
 ]
 
 
-def adaptiveSignalIsolation(image: ColorImage) -> BinaryImage:
-    maxHedge = 1
-    minHedge = 0.6  # 0.5
-
-    grayscaleImage = image.toGrayscale()
-    otsuThreshold = otsu.otsuThreshold(grayscaleImage)
-
-    hedging = float(maxHedge)
-    binary = grayscaleImage.toBinary(otsuThreshold * hedging)
-
-    while estimateFrequencyViaAutocorrelation(binary.data):
-        hedging -= 0.05  # TODO: More intelligent choice of step
-        if hedging < minHedge:
-            break
-
-        binary = grayscaleImage.toBinary(otsuThreshold * hedging)
-
-
-    return binary
-
-
-def denoise(image: BinaryImage, kernelSize: int = 3, erosions: int = 1, dilations: int = 1) -> BinaryImage:
-    eroded = image
-
-    for _ in range(erosions):
-        eroded = cv2.erode(
-            eroded,
-            cv2.getStructuringElement(cv2.MORPH_CROSS, (kernelSize, kernelSize))
-        )
-
-    dilated = eroded
-
-    for _ in range(dilations):
-        dilated = cv2.dilate(
-            dilated,
-            cv2.getStructuringElement(cv2.MORPH_DILATE, (kernelSize, kernelSize))
-        )
-
-    return BinaryImage(dilated)
-
-
 # TODO: Make score multiply, or normalize the score by the length of the path
 def score(currentPoint: Tuple[int, int], candidatePoint: Tuple[int, int], candidateAngle: float):
     DISTANCE_WEIGHT = 1

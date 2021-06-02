@@ -9,7 +9,6 @@ import numpy as np
 
 from ..image import BinaryImage, ColorImage
 from .. import vision
-from ..signal import detection as signal_detection
 
 
 def kernelApproach(colorImage: ColorImage) -> BinaryImage:
@@ -38,12 +37,12 @@ def kernelApproach(colorImage: ColorImage) -> BinaryImage:
 
     return BinaryImage(final)
 
-
+#
 def thresholdApproach(colorImage: ColorImage, erode: bool =False) -> BinaryImage:
     greyscaleImage = colorImage.toGrayscale()
     binaryImage = greyscaleImage.toBinary(threshold=220)
 
-    signalImage = signal_detection.mallawaarachchi(colorImage, useBlur=True, invert=True)
+    signalImage = colorImage.toGrayscale().toBinary() # Mallawaarchi method
     dilatedSignal = cv2.dilate(
         signalImage,
         cv2.getStructuringElement(cv2.MORPH_DILATE, (5,5))
@@ -69,7 +68,7 @@ def thresholdApproach(colorImage: ColorImage, erode: bool =False) -> BinaryImage
         return subtracted
 
 
-def allDarkPixels(colorImage: ColorImage) -> BinaryImage:
+def allDarkPixels(colorImage: ColorImage, belowThreshold: int = 230) -> BinaryImage:
     grayscale = colorImage.toGrayscale()
 
     # Adjusts the exposure of the image so that the most common pixel is pure white
@@ -77,6 +76,6 @@ def allDarkPixels(colorImage: ColorImage) -> BinaryImage:
     adjusted = grayscale.whitePointAdjusted()
 
     # Now that we have applied some normalization,
-    binary = adjusted.toBinary(threshold=230)
+    binary = adjusted.toBinary(belowThreshold)
 
     return binary
