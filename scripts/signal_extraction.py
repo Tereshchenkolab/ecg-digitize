@@ -75,7 +75,9 @@ def validate():
         else:
             output = binary.toColor()
 
-        saveImage(output, Path(f"validation/signal/{Path(path).name}"))
+        outputPath = f"validation/signal/{Path(path).name}"
+        saveImage(output, Path(outputPath))
+        print(f"Saved '{outputPath}'")
 
 
 def testSingle(path: str):
@@ -83,6 +85,8 @@ def testSingle(path: str):
 
     binary = signal_detection.adaptive(image)
     signal = ecgdigitize.digitizeSignal(image)
+
+    visualization.displayImage(binary.toColor())
 
     if signal is not None:
         output = visualization.overlaySignalOnImage(signal, binary.toColor())
@@ -94,7 +98,7 @@ def testSingle(path: str):
 
 if __name__ == "__main__":
     validate()
-    # testSingle('lead-pictures/SOHSU10121052013140_0001-50298946.png')
+    # testSingle('lead-pictures/040-46000898.png')
 
 
 # TODO:

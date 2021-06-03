@@ -1,3 +1,4 @@
+from ecgdigitize import visualization
 from typing import Optional, Union
 from dataclasses import dataclass
 from enum import Enum
@@ -13,11 +14,14 @@ from .signal.extraction import viterbi
 from . import vision
 
 
-def estimateRotationAngle(image: ColorImage, houghThresholdFraction: float = 0.25) -> Optional[float]:
+def estimateRotationAngle(image: ColorImage, houghThresholdFraction: float = 0.5) -> Optional[float]:
     binaryImage = grid_detection.thresholdApproach(image)
 
     houghThreshold = int(image.width * houghThresholdFraction)
     lines = vision.houghLines(binaryImage, houghThreshold)
+
+    # <- DEBUG ->
+    # visualization.displayImage(visualization.overlayLines(lines, image))
 
     angles = common.mapList(lines, vision.houghLineToAngle)
     offsets = common.mapList(angles, lambda angle: angle % 90)
